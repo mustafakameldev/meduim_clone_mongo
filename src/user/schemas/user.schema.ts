@@ -18,6 +18,12 @@ export class User {
   bio: string;
   @Prop()
   image: string;
+  @Prop()
+  createdAt: Date;
+  @Prop()
+  updatedAt: Date;
+  @Prop()
+  token: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
