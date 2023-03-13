@@ -40,17 +40,31 @@ export class UserService {
     user.token = this.generateJWT(user);
     return user;
   }
+  async findOne(userId: string) {
+    return await this.userModel.findOne({ _id: userId });
+  }
   generateJWT(user: User): string {
     return sign(
       {
-        username: user.username,
-        email: user.email,
-        createdAt: user.createdAt,
+        id: user._id,
       },
       JWT_SECRET,
     );
   }
   async findAll() {
     return this.userModel.find().exec();
+  }
+
+  async removeAll() {
+    // try {
+    //   this.userModel
+    //     .deleteMany({})
+    //     .then(() => {
+    //       console.log('remove');
+    //     })
+    //     .catch((err) => console.log('err', err));
+    // } catch (error) {
+    //   console.log('sdfsf', error);
+    // }
   }
 }

@@ -24,6 +24,7 @@ export class User {
   updatedAt: Date;
   @Prop()
   token: string;
+  _id: any;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
