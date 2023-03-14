@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Get,
   HttpException,
@@ -7,6 +8,7 @@ import {
   Post,
   Put,
   UseGuards,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -20,9 +22,11 @@ import { User } from './schemas/user.schema';
 import { UserRole } from './interfaces/role-tyoe.emun';
 import { CreateAdminDto } from './dtos/create-admin.dto';
 import { LoginDto } from './dtos/login.dto';
+import MongooseClassSerializerInterceptor from './interceptors/serialize.interceptor';
 
 @Controller()
 @ApiTags('auth')
+@UseInterceptors(MongooseClassSerializerInterceptor(User))
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -51,14 +55,14 @@ export class UserController {
     if (user.role != UserRole.superAdmin) {
       throw new HttpException('Not authorized', HttpStatus.FORBIDDEN);
     }
-    return await this.userService.createAdmin(body);
+    const newUser = await this.userService.createAdmin(body);
+    return newUser;
   }
 
   @Post('auth/login')
   @UsePipes(new ValidationPipe())
   async login(@Body() body: LoginDto): Promise<User> {
     const user = await this.userService.login(body);
-
-    return user;
+    return this.userService.buildUserResponse(user);
   }
 }

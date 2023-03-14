@@ -15,6 +15,6 @@ export class AuthGuard implements CanActivate {
     if (request.user) {
       return true;
     }
-    throw new HttpException('Not Authorized ', HttpStatus.UNAUTHORIZED);
+    throw new HttpException('Not Authorized 12 ', HttpStatus.UNAUTHORIZED);
   }
 }

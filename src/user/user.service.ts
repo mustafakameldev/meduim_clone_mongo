@@ -37,7 +37,6 @@ export class UserService {
     newUser.createdAt = new Date();
     newUser.updatedAt = new Date();
     const user = await this.userModel.create(newUser);
-    delete user['password'];
     return user;
   }
 
@@ -46,12 +45,14 @@ export class UserService {
     return user;
   }
   async findOne(userId: string) {
-    return await this.userModel.findOne({ _id: userId });
+    const user = await this.userModel.findById(userId);
+    return user;
   }
   generateJWT(user: User): string {
     return sign(
       {
         id: user._id,
+        username: user.username,
       },
       JWT_SECRET,
     );
@@ -96,9 +97,9 @@ export class UserService {
     newUser.updatedAt = new Date();
     newUser.role = UserRole.admin;
     const user = await this.userModel.create(newUser);
-    delete user['password'];
     return user;
   }
+
   async login(loginDto: LoginDto): Promise<User> {
     const user =
       (await this.userModel.findOne({
