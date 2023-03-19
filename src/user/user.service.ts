@@ -64,7 +64,10 @@ export class UserService {
     );
   }
   async findAll() {
-    return this.userModel.find().exec();
+    return this.userModel
+      .find(undefined, '_id username bio image createdAt updatedAt role email')
+      .lean()
+      .exec();
   }
 
   async removeAll() {
@@ -174,5 +177,18 @@ export class UserService {
     const user = await this.userModel.findOne({ _id: id });
     Object.assign(user, updateDto);
     return await user.save();
+  }
+
+  async deleteUser(userId: string): Promise<{ message: string }> {
+    const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
+    if (checkForHexRegExp.test(userId)) {
+      const user = await this.userModel.findOneAndDelete({ _id: userId });
+      if (user) {
+        return { message: 'User deleted successfully' };
+      } else {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+    }
+    throw new HttpException('wrong user id', HttpStatus.UNPROCESSABLE_ENTITY);
   }
 }

@@ -2,6 +2,7 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
@@ -47,7 +48,7 @@ export class UserController {
   @Get('users')
   async getUsers() {
     const users = await this.userService.findAll();
-    return users;
+    return users.map((user) => ({ ...user, _id: user._id.toString() }));
   }
 
   @Post('auth/admin')
@@ -94,9 +95,22 @@ export class UserController {
     @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<User> {
-    console.log('update', id, user);
     if (id == user._id.toString()) {
       return await this.userService.updateUser(body, id);
+    }
+    throw new HttpException('Not authorized', HttpStatus.FORBIDDEN);
+  }
+  @Delete('users/:id')
+  @UseGuards(AuthGuard)
+  async deleteUser(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: User,
+  ): Promise<{ message: string }> {
+    if (
+      currentUser?.role == UserRole.admin ||
+      currentUser?.role == UserRole.superAdmin
+    ) {
+      return this.userService.deleteUser(id);
     }
     throw new HttpException('Not authorized', HttpStatus.FORBIDDEN);
   }
