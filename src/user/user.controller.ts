@@ -23,6 +23,8 @@ import { UserRole } from './interfaces/role-tyoe.emun';
 import { CreateAdminDto } from './dtos/create-admin.dto';
 import { LoginDto } from './dtos/login.dto';
 import MongooseClassSerializerInterceptor from './interceptors/serialize.interceptor';
+import { SearchUsersDto } from './dtos/search-users.dto';
+import { SearchUsersInterface } from './types/searchUsersResponse.interface';
 
 @Controller()
 @ApiTags('auth')
@@ -64,5 +66,21 @@ export class UserController {
   async login(@Body() body: LoginDto): Promise<User> {
     const user = await this.userService.login(body);
     return this.userService.buildUserResponse(user);
+  }
+
+  @Post('users/search')
+  @UsePipes(new ValidationPipe())
+  async searchUsers(
+    @Body() body: SearchUsersDto,
+    @CurrentUser() currentUser: User,
+  ): Promise<SearchUsersInterface> {
+    if (
+      currentUser?.role == UserRole.admin ||
+      currentUser?.role == UserRole.superAdmin
+    ) {
+      return await this.userService.searchUsers(body);
+    } else {
+      throw new HttpException('Not authorized', HttpStatus.FORBIDDEN);
+    }
   }
 }

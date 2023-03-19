@@ -10,6 +10,8 @@ import { JWT_SECRET } from 'src/utils/config';
 import { CreateAdminDto } from './dtos/create-admin.dto';
 import { UserRole } from './interfaces/role-tyoe.emun';
 import { LoginDto } from './dtos/login.dto';
+import { SearchUsersDto } from './dtos/search-users.dto';
+import { SearchUsersInterface } from './types/searchUsersResponse.interface';
 @Injectable()
 export class UserService {
   constructor(
@@ -62,16 +64,16 @@ export class UserService {
   }
 
   async removeAll() {
-    // try {
-    //   this.userModel
-    //     .deleteMany({})
-    //     .then(() => {
-    //       console.log('remove');
-    //     })
-    //     .catch((err) => console.log('err', err));
-    // } catch (error) {
-    //   console.log('sdfsf', error);
-    // }
+    try {
+      this.userModel
+        .deleteMany({})
+        .then(() => {
+          console.log('remove');
+        })
+        .catch((err) => console.log('err', err));
+    } catch (error) {
+      console.log('sdfsf', error);
+    }
   }
 
   async createAdmin(userDto: CreateAdminDto): Promise<User> {
@@ -123,5 +125,35 @@ export class UserService {
       );
     }
     return user;
+  }
+  async searchUsers(dto: SearchUsersDto): Promise<SearchUsersInterface> {
+    const users = await this.getAllUsers(dto);
+    return users;
+  }
+
+  async getAllUsers(dto: SearchUsersDto): Promise<SearchUsersInterface> {
+    const filters: any = {};
+    if (typeof dto.searchTerm == 'string') {
+      filters['username'] = { $regex: dto.searchTerm, $options: 'i' };
+    }
+    if (Object.values(UserRole).includes(dto.filterByUserRole)) {
+      filters['role'] = dto.filterByUserRole;
+    }
+    const users = await this.userModel
+      .find(filters, 'id username email role bio createdAt updatedAt image')
+      .limit(dto.size)
+      .skip(dto.offset)
+      .lean()
+      .exec();
+
+    //TODO: remove mapping user data, and update users query to get data as it mapped
+    const usersCount = await this.userModel.find(filters).count();
+    return {
+      content: users.map((user) => ({
+        ...user,
+        _id: user._id.toString(),
+      })),
+      count: usersCount,
+    };
   }
 }
