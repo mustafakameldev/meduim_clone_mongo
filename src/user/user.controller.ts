@@ -5,6 +5,8 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -25,6 +27,7 @@ import { LoginDto } from './dtos/login.dto';
 import MongooseClassSerializerInterceptor from './interceptors/serialize.interceptor';
 import { SearchUsersDto } from './dtos/search-users.dto';
 import { SearchUsersInterface } from './types/searchUsersResponse.interface';
+import { UpdateUserDto } from './dtos/update-user.dto';
 
 @Controller()
 @ApiTags('auth')
@@ -82,5 +85,19 @@ export class UserController {
     } else {
       throw new HttpException('Not authorized', HttpStatus.FORBIDDEN);
     }
+  }
+  @Patch('users/update/:id')
+  @UseGuards(AuthGuard)
+  @UsePipes(new ValidationPipe())
+  async updateUser(
+    @Body() body: UpdateUserDto,
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+  ): Promise<User> {
+    console.log('update', id, user);
+    if (id == user._id.toString()) {
+      return await this.userService.updateUser(body, id);
+    }
+    throw new HttpException('Not authorized', HttpStatus.FORBIDDEN);
   }
 }

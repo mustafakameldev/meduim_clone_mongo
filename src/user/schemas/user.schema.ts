@@ -26,18 +26,9 @@ export class User {
   updatedAt: Date;
   @Prop()
   token: string;
-  @Transform(({ value }) => value.toString(), { toPlainOnly: true })
+
   _id: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 UserSchema.index({ username: 'text', role: 'text', bio: 'text' });
-
-UserSchema.virtual('id').get(function () {
-  return this._id.toString();
-});
-
-// Ensure virtual fields are serialised.
-UserSchema.set('toJSON', {
-  virtuals: true,
-});

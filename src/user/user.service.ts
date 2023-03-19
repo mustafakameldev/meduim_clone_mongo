@@ -12,6 +12,7 @@ import { UserRole } from './interfaces/role-tyoe.emun';
 import { LoginDto } from './dtos/login.dto';
 import { SearchUsersDto } from './dtos/search-users.dto';
 import { SearchUsersInterface } from './types/searchUsersResponse.interface';
+import { UpdateUserDto } from './dtos/update-user.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -38,7 +39,10 @@ export class UserService {
     newUser.password = await hashPassword(newUser.password);
     newUser.createdAt = new Date();
     newUser.updatedAt = new Date();
-    const user = await this.userModel.create(newUser);
+    const createUser = await this.userModel.create(newUser);
+    const user = await this.userModel.findOne({ _id: createUser._id }).lean();
+    delete user.password;
+    user._id = user._id.toString();
     return user;
   }
 
@@ -53,7 +57,7 @@ export class UserService {
   generateJWT(user: User): string {
     return sign(
       {
-        id: user._id,
+        _id: user._id,
         username: user.username,
       },
       JWT_SECRET,
@@ -72,7 +76,7 @@ export class UserService {
         })
         .catch((err) => console.log('err', err));
     } catch (error) {
-      console.log('sdfsf', error);
+      console.log('error', error);
     }
   }
 
@@ -104,10 +108,14 @@ export class UserService {
 
   async login(loginDto: LoginDto): Promise<User> {
     const user =
-      (await this.userModel.findOne({
-        username: loginDto.usernameOrEmail,
-      })) ||
-      (await this.userModel.findOne({ email: loginDto.usernameOrEmail }));
+      (await this.userModel
+        .findOne({
+          username: loginDto.usernameOrEmail,
+        })
+        .lean()) ||
+      (await this.userModel
+        .findOne({ email: loginDto.usernameOrEmail })
+        .lean());
     if (!user) {
       throw new HttpException(
         'username or password is wrong',
@@ -124,6 +132,8 @@ export class UserService {
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
+    delete user.password;
+    user._id = user._id.toString();
     return user;
   }
   async searchUsers(dto: SearchUsersDto): Promise<SearchUsersInterface> {
@@ -155,5 +165,14 @@ export class UserService {
       })),
       count: usersCount,
     };
+  }
+
+  async updateUser(
+    updateDto: UpdateUserDto,
+    id: string,
+  ): Promise<UserResponseInterface> {
+    const user = await this.userModel.findOne({ _id: id });
+    Object.assign(user, updateDto);
+    return await user.save();
   }
 }
