@@ -13,6 +13,7 @@ import { LoginDto } from './dtos/login.dto';
 import { SearchUsersDto } from './dtos/search-users.dto';
 import { SearchUsersInterface } from './types/searchUsersResponse.interface';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { checkMongoId } from 'src/utils/regix';
 @Injectable()
 export class UserService {
   constructor(
@@ -176,19 +177,25 @@ export class UserService {
   ): Promise<UserResponseInterface> {
     const user = await this.userModel.findOne({ _id: id });
     Object.assign(user, updateDto);
+    user.updatedAt = new Date();
     return await user.save();
   }
 
   async deleteUser(userId: string): Promise<{ message: string }> {
-    const checkForHexRegExp = new RegExp('^[0-9a-fA-F]{24}$');
-    if (checkForHexRegExp.test(userId)) {
-      const user = await this.userModel.findOneAndDelete({ _id: userId });
-      if (user) {
-        return { message: 'User deleted successfully' };
-      } else {
-        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-      }
+    if (!checkMongoId(userId)) {
+      throw new HttpException('wrong user id', HttpStatus.UNPROCESSABLE_ENTITY);
     }
-    throw new HttpException('wrong user id', HttpStatus.UNPROCESSABLE_ENTITY);
+    const user = await this.userModel.deleteOne({ _id: userId });
+    if (user.deletedCount == 1) {
+      return { message: 'User deleted successfully' };
+    }
+    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+  }
+
+  async toggleActiveUser(userId: string): Promise<UserResponseInterface> {
+    const user = await this.userModel.findOne({ _id: userId });
+    user.active = !user.active;
+    user.updatedAt = new Date();
+    return await user.save();
   }
 }

@@ -29,6 +29,7 @@ import MongooseClassSerializerInterceptor from './interceptors/serialize.interce
 import { SearchUsersDto } from './dtos/search-users.dto';
 import { SearchUsersInterface } from './types/searchUsersResponse.interface';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { AdminGuard } from 'src/guards/admin.guard';
 
 @Controller()
 @ApiTags('auth')
@@ -113,5 +114,11 @@ export class UserController {
       return this.userService.deleteUser(id);
     }
     throw new HttpException('Not authorized', HttpStatus.FORBIDDEN);
+  }
+  @Patch('users/activate')
+  @UseGuards(AdminGuard)
+  @UsePipes(new ValidationPipe())
+  async activateUser(@Body('id') id: string, @CurrentUser() currentUser: User) {
+    return this.userService.toggleActiveUser(id);
   }
 }
