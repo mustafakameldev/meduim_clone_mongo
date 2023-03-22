@@ -7,12 +7,10 @@ export type CategoryDocument = HydratedDocument<Category>;
 export class Category {
   @Prop()
   name: string;
-
   @Prop()
-  age: number;
-
+  createdAt: Date;
   @Prop()
-  breed: string;
+  updatedAt: Date;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);

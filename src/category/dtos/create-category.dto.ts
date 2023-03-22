@@ -1,5 +1,8 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
+
 export class CreateCategoryDto {
-  readonly name: string;
-  readonly age: number;
-  readonly breed: string;
+  @IsString()
+  @ApiProperty()
+  name: string;
 }

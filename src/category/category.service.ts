@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateCategoryDto } from './dtos/create-category.dto';
@@ -12,10 +12,26 @@ export class CategoryService {
   ) {}
 
   async create(createCatDto: CreateCategoryDto): Promise<Category> {
-    const createdCat = await this.catModel.create(createCatDto);
-    return createdCat;
+    const find = await this.catModel.findOne({ name: createCatDto.name });
+    if (find) {
+      throw new HttpException(
+        'Category already exists',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+    const category = new Category();
+    Object.assign(category, createCatDto);
+    category.createdAt = new Date();
+    category.updatedAt = new Date();
+    const createdCat = await this.catModel.create(category);
+    const response = createdCat.toJSON();
+    delete response['__v'];
+    return response;
   }
 
+  async updateCategory(category: Category): Promise<Category> {
+    return '' as any;
+  }
   async findAll(): Promise<Category[]> {
     return this.catModel.find().exec();
   }
