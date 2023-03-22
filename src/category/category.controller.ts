@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
@@ -19,6 +20,7 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/user/decorators/currentUser.decorator';
 import { User } from 'src/user/schemas/user.schema';
 import { UserRole } from 'src/user/interfaces/role-tyoe.emun';
+import { checkMongoId } from 'src/utils/regix';
 
 @Controller('categories')
 @ApiTags('categories')
@@ -40,10 +42,29 @@ export class CategoryController {
     );
   }
 
-  // @Get()
-  // async findAll(): Promise<Category[]> {
-  //   return this.catsService.findAll();
-  // }
+  @Put('/:id')
+  @UseGuards(AuthGuard)
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() createCatDto: CreateCategoryDto,
+    @CurrentUser() user: User,
+  ): Promise<Category> {
+    if (!checkMongoId(id)) {
+      throw new HttpException('Category Id is wrong', HttpStatus.NOT_FOUND);
+    }
+    if (user?.role != UserRole.customer) {
+      return await this.catsService.updateCategory(id, createCatDto);
+    }
+    throw new HttpException(
+      'Not authorized to update category',
+      HttpStatus.FORBIDDEN,
+    );
+  }
+
+  @Post('search')
+  async findAll(): Promise<Category[]> {
+    return this.catsService.findAll();
+  }
 
   // @Get(':id')
   // async findOne(@Param('id') id: string): Promise<Category> {

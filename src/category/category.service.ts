@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateCategoryDto } from './dtos/create-category.dto';
+import { UpdateCategoryDto } from './dtos/update-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
 
 @Injectable()
@@ -29,8 +30,18 @@ export class CategoryService {
     return response;
   }
 
-  async updateCategory(category: Category): Promise<Category> {
-    return '' as any;
+  async updateCategory(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
+    const category = await this.catModel.findById(id);
+    if (!category)
+      throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+    Object.assign(category, updateCategoryDto);
+    category.updatedAt = new Date();
+    const updatedCat = (await category.save()).toJSON();
+    delete updatedCat['__v'];
+    return updatedCat;
   }
   async findAll(): Promise<Category[]> {
     return this.catModel.find().exec();
