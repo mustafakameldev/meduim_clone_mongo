@@ -30,6 +30,7 @@ import { SearchUsersDto } from './dtos/search-users.dto';
 import { SearchUsersInterface } from './types/searchUsersResponse.interface';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { AdminGuard } from 'src/guards/admin.guard';
+import { ActivateUserDto } from './dtos/activate-user.dto';
 
 @Controller()
 @ApiTags('auth')
@@ -118,7 +119,7 @@ export class UserController {
   @Patch('users/activate')
   @UseGuards(AdminGuard)
   @UsePipes(new ValidationPipe())
-  async activateUser(@Body('id') id: string, @CurrentUser() currentUser: User) {
-    return this.userService.toggleActiveUser(id);
+  async activateUser(@Body() activateDto: ActivateUserDto) {
+    return this.userService.toggleActiveUser(activateDto.id);
   }
 }

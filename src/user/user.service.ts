@@ -196,6 +196,9 @@ export class UserService {
     const user = await this.userModel.findOne({ _id: userId });
     user.active = !user.active;
     user.updatedAt = new Date();
-    return await user.save();
+    const updatedUser = (await user.save()).toJSON();
+    delete updatedUser.password;
+    updatedUser._id = updatedUser._id.toString();
+    return updatedUser;
   }
 }
