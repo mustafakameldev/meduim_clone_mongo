@@ -154,7 +154,7 @@ export class UserService {
       filters['role'] = dto.filterByUserRole;
     }
     const users = await this.userModel
-      .find(filters, 'id username email role bio createdAt updatedAt image')
+      .find(filters)
       .limit(dto.size)
       .skip(dto.offset)
       .lean()

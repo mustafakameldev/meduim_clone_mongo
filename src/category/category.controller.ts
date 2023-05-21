@@ -21,6 +21,7 @@ import { CurrentUser } from 'src/user/decorators/currentUser.decorator';
 import { User } from 'src/user/schemas/user.schema';
 import { UserRole } from 'src/user/interfaces/role-tyoe.emun';
 import { checkMongoId } from 'src/utils/regix';
+import { SearchCategoriesDto } from './dtos/search-category.dto';
 
 @Controller('categories')
 @ApiTags('categories')
@@ -34,7 +35,7 @@ export class CategoryController {
     @CurrentUser() user: User,
   ) {
     if (user?.role != UserRole.customer) {
-      return await this.catsService.create(createCatDto);
+      return await this.catsService.create(createCatDto, user);
     }
     throw new HttpException(
       'Not authorized to create category',
@@ -62,7 +63,8 @@ export class CategoryController {
   }
 
   @Post('search')
-  async findAll(): Promise<Category[]> {
+  @UseGuards(AuthGuard)
+  async findAll(@Body() body: SearchCategoriesDto): Promise<Category[]> {
     return this.catsService.findAll();
   }
 

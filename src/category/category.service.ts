@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { User } from 'src/user/schemas/user.schema';
 import { CreateCategoryDto } from './dtos/create-category.dto';
 import { UpdateCategoryDto } from './dtos/update-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
@@ -12,7 +13,7 @@ export class CategoryService {
     private readonly catModel: Model<CategoryDocument>,
   ) {}
 
-  async create(createCatDto: CreateCategoryDto): Promise<Category> {
+  async create(createCatDto: CreateCategoryDto, user: User): Promise<Category> {
     const find = await this.catModel.findOne({ name: createCatDto.name });
     if (find) {
       throw new HttpException(
@@ -22,8 +23,10 @@ export class CategoryService {
     }
     const category = new Category();
     Object.assign(category, createCatDto);
+
     category.createdAt = new Date();
     category.updatedAt = new Date();
+    category.user = user;
     const createdCat = await this.catModel.create(category);
     const response = createdCat.toJSON();
     delete response['__v'];
@@ -44,7 +47,10 @@ export class CategoryService {
     return updatedCat;
   }
   async findAll(): Promise<Category[]> {
-    return this.catModel.find().exec();
+    return this.catModel
+      .find(undefined, 'name createdAt updatedAt')
+      .populate('user')
+      .exec();
   }
 
   async findOne(id: string): Promise<Category> {
